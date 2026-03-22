@@ -410,7 +410,3 @@ Use a process supervisor (systemd on Linux, LaunchAgent on macOS, NSSM on Window
 ## License
 
 MIT
-
----
-
-Built with [Claude Code](https://docs.anthropic.com/en/docs/claude-code) by [openclaw](https://github.com/bujosa)

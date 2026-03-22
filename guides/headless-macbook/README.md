@@ -241,7 +241,3 @@ tail -f /tmp/claude-telegram.log
 - **Set the MacBook to auto-boot on power restore**: `sudo pmset -a autorestart 1` — if power goes out and comes back, it boots automatically
 - **Monitor remotely**: `ssh myserver "pmset -g; uptime; df -h"` to check health
 - **Update Claude Code remotely**: `ssh myserver "npm update -g @anthropic-ai/claude-code"`
-
----
-
-Back to [main guide](../../README.md)
