@@ -1,0 +1,16 @@
+[Unit]
+Description=Claude Code Telegram Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/YOUR_USERNAME/.bun/bin
+ExecStart=/usr/local/bin/claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions
+Restart=on-failure
+RestartSec=10
+WorkingDirectory=/home/YOUR_USERNAME
+
+[Install]
+WantedBy=multi-user.target
