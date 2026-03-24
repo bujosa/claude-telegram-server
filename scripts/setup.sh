@@ -92,7 +92,8 @@ sudo pmset -a sleep 0 displaysleep 0 disksleep 0 standby 0 \
 # Install LaunchAgent
 echo ""
 echo "Installing LaunchAgent for auto-start on boot..."
-cp scripts/com.claude.telegram.plist ~/Library/LaunchAgents/ 2>/dev/null || \
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cp "$SCRIPT_DIR/com.claude.telegram.plist" ~/Library/LaunchAgents/ 2>/dev/null || \
     cp com.claude.telegram.plist ~/Library/LaunchAgents/ 2>/dev/null || true
 launchctl load ~/Library/LaunchAgents/com.claude.telegram.plist 2>/dev/null || true
 
@@ -101,7 +102,7 @@ echo "=== Setup Complete ==="
 echo ""
 echo "Next steps:"
 echo "  1. Run: claude auth login --claudeai"
-echo "  2. Launch: tmux new-session -d -s claude-telegram 'claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions'"
+echo "  2. Launch: tmux new-session -d -s claude-telegram 'yes | claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions --permission-mode bypassPermissions'"
 echo "  3. Message your bot in Telegram"
 echo "  4. Pair: /telegram:access pair <code>"
 echo "  5. Lock: /telegram:access policy allowlist"

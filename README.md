@@ -177,7 +177,7 @@ Create `~/Library/LaunchAgents/com.claude.telegram.plist`:
     <array>
         <string>/bin/zsh</string>
         <string>-c</string>
-        <string>export PATH=/opt/homebrew/bin:$HOME/.bun/bin:$PATH &amp;&amp; tmux kill-session -t claude-telegram 2>/dev/null; tmux new-session -d -s claude-telegram "export PATH=/opt/homebrew/bin:$HOME/.bun/bin:$PATH &amp;&amp; claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions"</string>
+        <string>sleep 10 &amp;&amp; export PATH=/opt/homebrew/bin:$HOME/.bun/bin:$PATH &amp;&amp; tmux kill-session -t claude-telegram 2>/dev/null; tmux new-session -d -s claude-telegram "export PATH=/opt/homebrew/bin:$HOME/.bun/bin:$PATH &amp;&amp; yes | claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions --permission-mode bypassPermissions"</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -188,6 +188,15 @@ Create `~/Library/LaunchAgents/com.claude.telegram.plist`:
 </dict>
 </plist>
 ```
+
+Key details about this LaunchAgent:
+
+- **`sleep 10`** — waits for the network to be ready after boot
+- **`yes |`** — auto-accepts the workspace trust dialog that Claude Code shows on first launch
+- **`--permission-mode bypassPermissions`** — skips the trust folder and bypass permissions prompts
+- **`--dangerously-skip-permissions`** — skips all command permission checks
+
+Without `yes |` and `--permission-mode bypassPermissions`, Claude Code will get stuck on interactive prompts after a reboot and the bot won't respond.
 
 Load it:
 
