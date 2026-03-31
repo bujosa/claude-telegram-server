@@ -10,6 +10,12 @@ Ready-to-use configuration files and scripts for setting up Claude Code as a Tel
 | [com.claude.telegram.plist](com.claude.telegram.plist) | macOS | LaunchAgent for auto-starting the bot on boot |
 | [claude-telegram.service](claude-telegram.service) | Linux | systemd service file for auto-starting the bot on boot |
 
+## Watchdog
+
+Claude Code has a [known CPU burn bug](https://github.com/anthropics/claude-code/issues/22275) where processes keep running at 80-100% CPU after sessions close. The watchdog kills these zombie processes automatically.
+
+See **[watchdog/](watchdog/)** for the script, install instructions, and platform-specific service files.
+
 ## Quick Start (macOS)
 
 ```bash

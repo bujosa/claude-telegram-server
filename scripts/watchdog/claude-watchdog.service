@@ -1,0 +1,11 @@
+[Unit]
+Description=Claude Code Watchdog — kill hung processes
+After=network.target
+
+[Service]
+Type=oneshot
+User=YOUR_USERNAME
+ExecStart=/usr/local/bin/claude-watchdog.sh
+Environment=CPU_THRESHOLD=80
+Environment=MIN_AGE_SECONDS=120
+Environment=LOG_FILE=/tmp/claude-watchdog.log

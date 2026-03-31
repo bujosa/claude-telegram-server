@@ -500,11 +500,29 @@ Use a process supervisor (systemd on Linux, LaunchAgent on macOS, NSSM on Window
 - [Claude Code Channels Guide](https://docs.anthropic.com/en/docs/claude-code/channels) — Official docs on the Channels feature (research preview)
 - [Claude Code Plugins](https://docs.anthropic.com/en/docs/claude-code/plugins) — How plugins and marketplaces work
 
+## Watchdog (CPU Burn Fix)
+
+Claude Code has a [known bug](https://github.com/anthropics/claude-code/issues/22275) where processes keep running at 80-100% CPU after sessions close. This affects all platforms and has been open since October 2025 with no official fix.
+
+The watchdog script runs every 5 minutes and kills:
+- Orphaned `caffeinate` processes (macOS)
+- Claude processes burning >80% CPU with no terminal attached
+- Orphaned child processes from dead sessions
+
+**[→ Watchdog Setup Guide](scripts/watchdog/README.md)**
+
+Quick test (dry run, no kills):
+
+```bash
+DRY_RUN=true bash scripts/watchdog/claude-watchdog.sh
+```
+
 ## Guides
 
 | Guide | Description |
 |-------|-------------|
 | [Headless MacBook Server](guides/headless-macbook/README.md) | Complete walkthrough for running on a MacBook with no monitor |
+| [Watchdog](scripts/watchdog/README.md) | Auto-kill hung Claude Code processes that burn CPU |
 
 ## License
 
