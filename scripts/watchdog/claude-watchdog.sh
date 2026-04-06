@@ -226,6 +226,60 @@ kill_memory_growth() {
     mv "$tmp_snapshot" "$current_snapshot"
 }
 
+# Kill orphaned/runaway bun workers spawned by Claude plugins.
+# Bun workers don't have "claude" in the process name, so they slip past the
+# main filter. Detect them via cwd containing /.claude/plugins/.
+kill_plugin_bun_workers() {
+    while IFS= read -r line; do
+        [[ -z "$line" ]] && continue
+
+        local pid ppid cpu rss_kb
+        pid="$(echo "$line" | awk '{print $1}')"
+        ppid="$(echo "$line" | awk '{print $2}')"
+        cpu="$(echo "$line" | awk '{print $3}')"
+        rss_kb="$(echo "$line" | awk '{print $4}')"
+
+        # Only consider bun processes whose cwd is under .claude/plugins
+        local cwd=""
+        if [[ "$OS" == "Darwin" ]]; then
+            cwd="$(lsof -a -d cwd -p "$pid" -Fn 2>/dev/null | awk '/^n/ {print substr($0,2); exit}')"
+        else
+            cwd="$(readlink -f "/proc/$pid/cwd" 2>/dev/null)"
+        fi
+        [[ "$cwd" != *"/.claude/plugins/"* ]] && continue
+
+        local rss_mb=$(( ${rss_kb:-0} / 1024 ))
+        local cpu_int
+        cpu_int="$(echo "${cpu:-0}" | cut -d. -f1)"
+        [[ -z "$cpu_int" ]] && cpu_int=0
+
+        # Memory leak: kill immediately, no age check
+        if (( rss_mb > MEM_THRESHOLD_MB )); then
+            kill_process "$pid" "Plugin bun worker memory hog: ${rss_mb}MB RSS [cwd: $cwd]"
+            continue
+        fi
+
+        # CPU hog: kill if old enough
+        if (( cpu_int > CPU_THRESHOLD )); then
+            local age
+            age="$(get_process_age_seconds "$pid")" || continue
+            if (( age > MIN_AGE_SECONDS )); then
+                kill_process "$pid" "Plugin bun worker CPU hog: ${cpu}% CPU for ${age}s [cwd: $cwd]"
+                continue
+            fi
+        fi
+
+        # Orphan (ppid=1) leftover from a dead Claude session
+        if [[ "$ppid" == "1" ]]; then
+            local age
+            age="$(get_process_age_seconds "$pid")" || continue
+            if (( age > MIN_AGE_SECONDS )); then
+                kill_process "$pid" "Orphaned plugin bun worker: ppid=1, ${age}s old [cwd: $cwd]"
+            fi
+        fi
+    done < <(ps -eo pid,ppid,%cpu,rss,comm 2>/dev/null | awk '$5 == "bun"')
+}
+
 # Kill orphaned Claude processes (parent=PID 1) with CPU > 10% and age > MIN_AGE_SECONDS.
 kill_orphaned_children() {
     while IFS= read -r line; do
@@ -262,4 +316,5 @@ kill_memory_hogs
 kill_memory_growth
 kill_cpu_hogs
 kill_orphaned_children
+kill_plugin_bun_workers
 log "Watchdog v2 run complete"
