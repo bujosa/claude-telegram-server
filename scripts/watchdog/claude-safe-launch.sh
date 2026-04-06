@@ -8,6 +8,10 @@
 
 set -euo pipefail
 
+# Ensure tools (tmux, claude, bun) are findable when invoked from non-interactive
+# SSH or launchd contexts that don't source the user's shell rc.
+export PATH="/opt/homebrew/bin:$HOME/.bun/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+
 # ---------- Config ----------
 # Defaults: no nice, no RAM cap. These laptops exist to run Claude agents,
 # so the agent should NOT be deprioritized. The watchdog handles runaways.
