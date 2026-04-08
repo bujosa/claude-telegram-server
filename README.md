@@ -2,6 +2,16 @@
 
 Turn any computer into a 24/7 Claude Code assistant you can talk to from Telegram. Send a message from your phone — Claude reads your files, writes code, runs commands, and replies right back.
 
+> **Heads-up (April 2026):** if you're setting this up on macOS, read
+> [`docs/postmortem-2026-04-07.md`](docs/postmortem-2026-04-07.md) first.
+> The `yes |` line in the original launch instructions causes claude to fall
+> back to `--print` mode and trigger a 100 MB/sec ArrayBuffer leak that can
+> freeze the entire machine within 90 seconds. The launcher and watchdog in
+> `scripts/` were rewritten to v4 to address this and four other latent bugs.
+> Most relevant: use `claude setup-token` (not `claude auth login`) for
+> headless setups, and let `setup.sh` install the plugin so it actually
+> verifies the install.
+
 ## How It Works
 
 ```
@@ -39,13 +49,40 @@ It's like having your IDE in your pocket.
 npm install -g @anthropic-ai/claude-code
 ```
 
-Authenticate with your Claude subscription:
+Authenticate with your Claude subscription. Pick the right command for your setup:
+
+**On a graphical Mac (browser available locally):**
 
 ```bash
 claude auth login --claudeai
 ```
 
-This gives you a URL to open in your browser. Sign in and paste the code back.
+This opens a browser, you sign in, and the token lands in macOS Keychain.
+
+**On a headless server (SSH-only, no browser, repurposed Mac mini, etc.):**
+
+```bash
+claude setup-token
+```
+
+`setup-token` prints a URL *and* waits on stdin for the code. Open the URL on
+any device with a browser, sign in with your Claude subscription, copy the
+code it gives you back, and paste it into the running `claude setup-token`
+prompt. You'll get a long-lived `sk-ant-oat01-…` token. Save it as an env file:
+
+```bash
+echo 'export CLAUDE_CODE_OAUTH_TOKEN="sk-ant-oat01-…"' > ~/.claude-auth.env
+chmod 600 ~/.claude-auth.env
+```
+
+The launcher in `scripts/watchdog/claude-safe-launch.sh` sources this file
+on every claude launch, so the token survives across reboots and restarts.
+
+> Why two paths: `claude auth login --claudeai` exits immediately after
+> printing the URL — it does not wait for a code paste-back, so it's only
+> useful when there's a local browser+keychain on the same machine. See
+> [`docs/postmortem-2026-04-07.md`](docs/postmortem-2026-04-07.md) for the
+> full story.
 
 ### Step 2 — Install Bun
 
@@ -91,9 +128,16 @@ Replace `<your-token-here>` with the token from BotFather.
 
 ### Step 6 — Launch Claude Code with Telegram
 
+> **Do NOT use `yes |` here.** Piping stdin into claude triggers `--print`
+> mode and the ArrayBuffer leak ([#32729][32729]) — your machine *will*
+> freeze within 90 seconds. Use a real tmux pty instead. The launcher in
+> `scripts/watchdog/claude-safe-launch.sh` does this correctly.
+
 ```bash
 claude --channels plugin:telegram@claude-plugins-official
 ```
+
+[32729]: https://github.com/anthropics/claude-code/issues/32729
 
 You should see:
 

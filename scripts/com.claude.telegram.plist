@@ -1,18 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
     <string>com.claude.telegram</string>
+
+    <!--
+        Launches the telegram bot via claude-safe-launch.sh.
+        - sleep 10 lets the network come up after boot
+        - BOT_MODE=true tells safe-launch.sh to spawn the bot in tmux
+        - $HOME is expanded by bash because we use `bash -c`
+        - WorkingDirectory must be set so claude doesn't ask the workspace-trust
+          prompt for `/` (which is launchd's default cwd). Replace USERNAME below.
+        - ThrottleInterval=300 means launchd waits 5 min before relaunching
+          if the script exits unexpectedly — buys time to investigate before
+          another crash cycle starts
+        - KeepAlive=false because safe-launch.sh creates a tmux session and
+          exits cleanly; the tmux session itself is what stays alive
+    -->
     <key>ProgramArguments</key>
     <array>
-        <string>/bin/zsh</string>
+        <string>/bin/bash</string>
         <string>-c</string>
-        <string>sleep 10 &amp;&amp; export PATH=/opt/homebrew/bin:$HOME/.bun/bin:$PATH &amp;&amp; tmux kill-session -t claude-telegram 2>/dev/null; tmux new-session -d -s claude-telegram "export PATH=/opt/homebrew/bin:$HOME/.bun/bin:$PATH &amp;&amp; yes | claude --channels plugin:telegram@claude-plugins-official --dangerously-skip-permissions --permission-mode bypassPermissions"</string>
+        <string>sleep 10 &amp;&amp; BOT_MODE=true /bin/bash $HOME/claude-safe-launch.sh</string>
     </array>
+
     <key>RunAtLoad</key>
     <true/>
+    <key>KeepAlive</key>
+    <false/>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/USERNAME</string>
+
+    <key>ThrottleInterval</key>
+    <integer>300</integer>
+
     <key>StandardOutPath</key>
     <string>/tmp/claude-telegram.log</string>
     <key>StandardErrorPath</key>

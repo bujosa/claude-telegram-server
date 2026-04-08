@@ -1,17 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
     <string>com.claude.watchdog</string>
+
+    <!--
+        Watchdog v4 — runs every 10 seconds (the macOS launchd minimum).
+        StartInterval=10 was 60 in v2/v3 — too slow to react to claude-code's
+        memory leak (#32729) which can hit 100MB/sec. 10s reaction time
+        catches the leak before the system OOMs.
+    -->
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
         <string>/usr/local/bin/claude-watchdog.sh</string>
     </array>
+
     <key>StartInterval</key>
-    <integer>60</integer>
+    <integer>10</integer>
+
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>RunAtLoad</key>
+    <true/>
+
     <key>StandardOutPath</key>
     <string>/tmp/claude-watchdog-launchd.log</string>
     <key>StandardErrorPath</key>
